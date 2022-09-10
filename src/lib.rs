@@ -22,8 +22,10 @@ pub enum I2C_Address {
     /// chosen by pin-strapping SDO to VDDIO
     BMA400_ALTERNATIVE = 0b001_0101,
     /// https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bma456-ds000.pdf#page=82
+    /// also used by BMA421 and BMA425
     BMA456 = 0b001_1000,
     /// https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bma456-ds000.pdf#page=82
+    /// also used by BMA421 and BMA425
     /// chosen by pin-strapping SDO to VDDIO
     BMA456_ALTERNATIVE = 0b001_1001,
 }
