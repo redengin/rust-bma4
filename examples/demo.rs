@@ -4,7 +4,7 @@ use panic_rtt_target as _;
 use cortex_m_rt::entry;
 use rtt_target::{rtt_init_print, rprintln};
 
-use rust_bma4::BMA4xx;
+use rust_bma4::{BMA4xx, I2C_Address};
 
 // hardware target (CHOOSE ONE)
 use nrf52832_hal::{self as hal};
@@ -30,10 +30,11 @@ fn main() -> ! {
 
     // Set up accelerometer
     let interrupt_pin1 = Some(gpio.p0_08.into_pullup_input());
-    let accelerometer = BMA4xx::new(
+    let bma4 = BMA4xx::new(
         i2c,
+        I2C_Address::BMA456,
         interrupt_pin1,
-        None);
+        None).unwrap();
 
     loop {
         rprintln!("Hello World");

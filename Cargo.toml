@@ -12,7 +12,9 @@ version = "0.0.1"
 
 [dependencies]
 embedded-hal = { version = "0.2", features = ["unproven"], default-features = false }
+num_enum = { version="0.5.7", default-features=false }
 # accelerometer = { version = "0.12", default-features = false }
+
 
 [dev-dependencies]
 cortex-m = "0.7"
