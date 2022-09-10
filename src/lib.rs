@@ -31,18 +31,18 @@ pub enum I2C_Address {
 }
 
 /// created per https://github.com/InfiniTimeOrg/InfiniTime/tree/develop/src/drivers
-impl<I2C, I2cError, InterruptPin> BMA4xx<I2C, InterruptPin>
+impl<I2C, CommunicationError, InterruptPin> BMA4xx<I2C, InterruptPin>
     where
-        I2C: hal::blocking::i2c::Write<Error = I2cError>
-            + hal::blocking::i2c::Read<Error = I2cError>
-            + hal::blocking::i2c::WriteRead<Error = I2cError>,
+        I2C: hal::blocking::i2c::Write<Error = CommunicationError>
+            + hal::blocking::i2c::Read<Error = CommunicationError>
+            + hal::blocking::i2c::WriteRead<Error = CommunicationError>,
         InterruptPin: hal::digital::v2::InputPin,
 {
     pub fn new<'a>(i2c: I2C,
                address: I2C_Address,
                interrupt_pin1: Option<InterruptPin>,
                interrupt_pin2: Option<InterruptPin>,
-    ) -> Result<Self, Error<I2cError>>
+    ) -> Result<Self, Error<CommunicationError>>
     {
         let mut _self = Self{
             i2c,
@@ -62,7 +62,7 @@ impl<I2C, I2cError, InterruptPin> BMA4xx<I2C, InterruptPin>
         Ok(_self)
     }
 
-    fn read_register(&mut self, register: Registers ) -> Result<u8, Error<I2cError>> {
+    fn read_register(&mut self, register: Registers ) -> Result<u8, Error<CommunicationError>> {
         let request = &[register as u8];
         let mut response:[u8;1] = [0;1];
         self.i2c.write_read(self.address as u8, request, &mut response).map_err(Error::I2c)?;
@@ -71,9 +71,9 @@ impl<I2C, I2cError, InterruptPin> BMA4xx<I2C, InterruptPin>
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum Error<I2cError> {
+pub enum Error<CommunicationError> {
     /// Underlying I2C device error
-    I2c(I2cError),
+    I2c(CommunicationError),
 
     /// unrecognized BMA chip id
     UnknownChipId(u8),
