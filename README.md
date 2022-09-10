@@ -1,10 +1,8 @@
 [Bosch Accelerometers](https://www.bosch-sensortec.com/products/motion-sensors/accelerometers/)
 ================================================================================
-Generally available parts
---------------------------------------------------------------------------------
-* [BMA456](https://www.bosch-sensortec.com/products/motion-sensors/accelerometers/bma456/)
-* [BMA422](https://www.bosch-sensortec.com/products/motion-sensors/accelerometers/bma422/)
-* [BMA400](https://www.bosch-sensortec.com/products/motion-sensors/accelerometers/bma400/)
+[Generally available parts](https://www.bosch-sensortec.com/products/motion-sensors/accelerometers/)
+
+This driver also supports BMA421 and BMA425.
 
 Functionality
 --------------------------------------------------------------------------------
