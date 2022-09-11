@@ -1,3 +1,8 @@
+DO NOT USE
+================================================================================
+BMA chips have different register maps, and therefore require specialized support
+
+
 Bosch Accelerometers
 ================================================================================
 [Generally available parts](https://www.bosch-sensortec.com/products/motion-sensors/accelerometers/)
