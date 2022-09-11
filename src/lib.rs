@@ -38,6 +38,7 @@ impl<I2C, CommunicationError, InterruptPin> BMA4xx<I2C, InterruptPin>
             + hal::blocking::i2c::WriteRead<Error = CommunicationError>,
         InterruptPin: hal::digital::v2::InputPin,
 {
+    /// verifies ability to talk to chip
     pub fn new<'a>(i2c: I2C,
                address: I2C_Address,
                interrupt_pin1: Option<InterruptPin>,
@@ -62,11 +63,66 @@ impl<I2C, CommunicationError, InterruptPin> BMA4xx<I2C, InterruptPin>
         Ok(_self)
     }
 
+    pub fn low_power(&mut self, config: Option<LowPowerOverSamplingConfig>) -> Result<(), Error<CommunicationError>> {
+        let mode =
+            Mode::LowPower as u8
+            | match config {
+                Some(config) => {
+                    const OSR_LP_SHIFT:usize = 6;
+                    const FILT1_BW_SHIFT:usize = 7;
+                    (1 << OSR_LP_SHIFT) | ((config as u8) << FILT1_BW_SHIFT)
+                }
+                None => 0
+            };
+
+        self.set_mode(mode)
+    }
+
+    fn set_mode(&mut self, mode: u8) -> Result<(), Error<CommunicationError>> {
+        self.write_register(Registers::ACC_CONF, mode)
+    }
+
+
+    fn drdy(&mut self) -> Result<bool, Error<CommunicationError>> {
+        let status = self.read_register(Registers::STATUS)?;
+        const DRDY_MASK:u8 = 1 << 7;
+        Ok((status & DRDY_MASK) == DRDY_MASK)
+    }
+
+    pub fn accelerations(&mut self) -> Result<[i16;3], Error<CommunicationError>> {
+        // make sure the data is available
+    #[cfg(debug_assertions)]
+        if !(self.drdy()?) {
+            return Err(Error::DataNotReady)
+        }
+
+        // get the data
+        let mut buffer:[u8;6] = [0;6];
+        self.read_registers(Registers::DATA_0, &mut buffer)?;
+
+        // convert the data
+        let mut accelerations:[i16;3] = [0; 3];
+        for i in 0..accelerations.len() {
+            let index = 2 * i;
+            let lsb = buffer[index] as i16;
+            let msb = buffer[index + 1] as i16;
+            let raw_value = (msb << 8) | lsb;
+            accelerations[i] = raw_value - (1<<11);
+        }
+        Ok(accelerations)
+    }
+
     fn read_register(&mut self, register: Registers ) -> Result<u8, Error<CommunicationError>> {
         let request = &[register as u8];
         let mut response:[u8;1] = [0;1];
         self.i2c.write_read(self.address as u8, request, &mut response).map_err(Error::I2c)?;
         Ok(response[0])
+    }
+
+    fn read_registers(&mut self, first_register: Registers, response: &mut [u8] ) -> Result<(), Error<CommunicationError>> {
+        let request = &[first_register as u8];
+        self.i2c.write_read(self.address as u8, request, response).map_err(Error::I2c)?;
+        Ok(())
     }
 }
 
@@ -74,12 +130,27 @@ impl<I2C, CommunicationError, InterruptPin> BMA4xx<I2C, InterruptPin>
 pub enum Error<CommunicationError> {
     /// Underlying I2C device error
     I2c(CommunicationError),
-
     /// unrecognized BMA chip id
     UnknownChipId(u8),
-    
+    /// Data not ready (likely chip is asleep)
+    DataNotReady,
     /// Device failed to resume from reset
     ResetTimeout
+}
+
+#[repr(u8)]
+/// https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bma400-ds000.pdf#page=40
+enum Mode {
+    Sleep       = 0x00,
+    LowPower    = 0x01,
+    Normal      = 0x02,
+}
+
+#[repr(u8)]
+/// https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bma400-ds000.pdf#page=66
+pub enum LowPowerOverSamplingConfig {
+    HIGH    = 0b00,
+    LOW     = 0b01,
 }
 
 #[derive(TryFromPrimitive)]

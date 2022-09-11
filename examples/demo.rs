@@ -30,13 +30,15 @@ fn main() -> ! {
 
     // Set up accelerometer
     let interrupt_pin1 = Some(gpio.p0_08.into_pullup_input());
-    let bma4 = BMA4xx::new(
+    let mut bma4 = BMA4xx::new(
         i2c,
         I2C_Address::BMA456,
         interrupt_pin1,
         None).unwrap();
+    // put the device into low power mode
+    bma4.low_power(None).unwrap();
 
     loop {
-        rprintln!("Hello World");
+        rprintln!("accelerations {:?}", bma4.accelerations().unwrap());
     }
 }
